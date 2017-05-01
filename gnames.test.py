@@ -5,6 +5,7 @@ import csv
 import random
 import logging
 import click
+import uuid
 
 
 def init (numToGenerate=10, companyDomain="company.com", defaultStart=datetime.date(2017,4,26),
@@ -25,10 +26,11 @@ def init (numToGenerate=10, companyDomain="company.com", defaultStart=datetime.d
     if numToGenerate > maxPermutations:
         raise RuntimeError("Cannot generate that many unique names with current sample sizes [{:d} * {:d} = {:d}]".format(len(surnames), len(firstnames), maxPermutations))
     
-    print("IDX,SURNAME,FIRST_NAME,EMAIL,MOBILE,IS_MANAGER,MANAGED_BY,START_DATE,END_DATE,PICTURE")
+    print("ID,SURNAME,FIRST_NAME,EMAIL,MOBILE,IS_MANAGER,MANAGED_BY,START_DATE,END_DATE,PICTURE")
     for idx in range(numToGenerate):
         logging.debug("Generate user [%d/%d]", idx+1, numToGenerate)
 
+        uuidStr = str(uuid.uuid1()).replace('-','').upper()
         fname = ""
         sname = ""
         tryCount = 0
@@ -56,19 +58,19 @@ def init (numToGenerate=10, companyDomain="company.com", defaultStart=datetime.d
 
         # TODO: pic resource
         isManager = ((random.random() < managerProbability) and (endDate <= startDate)) or (idx == 0)
-        myManager = random.choice(managers) if idx > 0 else -1
+        myManager = random.choice(managers) if idx > 0 else ""
         
         # Append to managers list after assigning our own manager
         if isManager:
-            managers.append(idx)
-        managerDbgString = ("Manager IDX: {:d}\n".format(myManager,)) if myManager >= 0 else ""
+            managers.append(uuidStr)
+        managerDbgString = ("Manager: {:s}\n".format(myManager,)) if myManager != "" else ""
         logging.debug("Employee: %s, %s %s\nStarted: %s%s\nMobile: %s, Email: %s%s\n",
                         sname.upper(), fname, "[Manager]" if isManager else "",
                         startDate, endDbgString,
                         mobile, email,
                         managerDbgString)
-        csvString = "{:d},{:s},{:s},{:s},{:s},{:s},{:s},{:s},{:s},,".format(idx, sname, fname, email, mobile, str(isManager),
-                        str(myManager) if myManager >= 0 else "", str(startDate), str(endDate) if endDate > startDate else "")
+        csvString = "{:s},{:s},{:s},{:s},{:s},{:s},{:s},{:s},{:s},,".format(uuidStr, sname, fname, email, mobile, str(isManager),
+                        myManager, str(startDate), str(endDate) if endDate > startDate else "")
         print(csvString)
     
 
